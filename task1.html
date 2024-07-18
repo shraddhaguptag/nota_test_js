@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button Swap</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            margin: 20px;
+        }
+        button {
+            margin: 5px 0;
+        }
+        #addButton {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<button id="addButton">Add Button</button>
+<div class="button-container" id="buttonContainer"></div>
+
+<script>
+let buttonCount = 0; // Track the number of buttons
+
+function addButton() {
+    buttonCount++; // Increment the button count
+    $('#buttonContainer').append(`<button class="swap-btn">${buttonCount}</button>`);
+}
+
+$(document).ready(function() {
+    // Initialize with 3 buttons
+    for (let i = 1; i <= 3; i++) {
+        addButton();
+    }
+
+    // Event listener to add a new button
+    $('#addButton').click(addButton);
+
+    // Event listener for button swap
+    $(document).on('click', '.swap-btn', function() {
+        const $this = $(this);
+        const $prev = $this.prev('.swap-btn');
+        const $next = $this.next('.swap-btn');
+        
+        if ($prev.length) {
+            // Swap with upper neighbor
+            $this.insertBefore($prev);
+        } else if ($next.length) {
+            // Swap with lower neighbor
+            $this.insertAfter($next);
+        }
+    });
+});
+</script>
+
+</body>
+</html>

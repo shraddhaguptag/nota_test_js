@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Management Table</title>
+   <style>
+    body {
+    font-family: Arial, sans-serif;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+button {
+    margin: 5px;
+}
+
+   </style>
+</head>
+<body>
+    <div id="app">
+        <h1>Data Management</h1>
+        <button id="addEntryBtn">Add New Entry</button>
+        <div id="newEntry" style="display: none;">
+            <input type="text" id="nameInput" placeholder="Enter Name" maxlength="256">
+            <button id="sendBtn">Send</button>
+            <div id="error" style="color: red; display: none;"></div>
+        </div>
+        <table id="dataTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Created at</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let entries = [];
+let nextId = 1; // Mock ID generator
+
+// Mock backend functions
+const mockFetchData = () => Promise.resolve([
+    { id: 1, name: "Entry One", datetime: new Date().toLocaleString() },
+    { id: 2, name: "Entry Two", datetime: new Date().toLocaleString() }
+]);
+
+const mockAddEntry = (name) => {
+    return new Promise((resolve, reject) => {
+        if (!name) {
+            reject(new Error('Name is required'));
+        } else {
+            const newEntry = { id: nextId++, name, datetime: new Date().toLocaleString() };
+            entries.push(newEntry);
+            resolve(newEntry);
+        }
+    });
+};
+
+const mockDeleteEntry = (id) => {
+    return new Promise((resolve) => {
+        entries = entries.filter(entry => entry.id !== id);
+        resolve();
+    });
+};
+
+const mockEditEntry = (id, name) => {
+    return new Promise((resolve, reject) => {
+        const entry = entries.find(entry => entry.id === id);
+        if (entry) {
+            entry.name = name;
+            resolve();
+        } else {
+            reject(new Error('Entry not found'));
+        }
+    });
+};
+
+// Load initial data
+window.onload = () => {
+    mockFetchData().then(data => {
+        entries = data;
+        renderTable();
+    });
+};
+
+// Render table
+const renderTable = () => {
+    const tableBody = document.getElementById('tableBody');
+    tableBody.innerHTML = '';
+
+    entries.forEach(entry => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${entry.id}</td>
+            <td>
+                <span id="name-${entry.id}">${entry.name}</span>
+                <input type="text" id="editName-${entry.id}" style="display: none;" value="${entry.name}" maxlength="256">
+            </td>
+            <td>${entry.datetime}</td>
+            <td>
+                <button onclick="editEntry(${entry.id})" id="editBtn-${entry.id}">Edit</button>
+                <button onclick="deleteEntry(${entry.id})">Delete</button>
+                <button onclick="saveEntry(${entry.id})" style="display: none;" id="saveBtn-${entry.id}">Save</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+};
+
+// Show new entry form
+document.getElementById('addEntryBtn').onclick = () => {
+    document.getElementById('newEntry').style.display = 'block';
+};
+
+// Add new entry
+document.getElementById('sendBtn').onclick = () => {
+    const name = document.getElementById('nameInput').value.trim();
+    if (!name) {
+        showError('Name is required');
+        return;
+    }
+    mockAddEntry(name)
+        .then(newEntry => {
+            entries.push(newEntry);
+            renderTable();
+            document.getElementById('nameInput').value = '';
+            document.getElementById('newEntry').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+        })
+        .catch(err => showError(err.message));
+};
+
+// Edit entry
+const editEntry = (id) => {
+    document.getElementById(`name-${id}`).style.display = 'none';
+    document.getElementById(`editName-${id}`).style.display = 'inline';
+    document.getElementById(`editBtn-${id}`).style.display = 'none';
+    document.getElementById(`saveBtn-${id}`).style.display = 'inline';
+};
+
+// Save entry
+const saveEntry = (id) => {
+    const name = document.getElementById(`editName-${id}`).value.trim();
+    if (!name) {
+        showError('Name cannot be empty');
+        return;
+    }
+    mockEditEntry(id, name)
+        .then(() => {
+            renderTable();
+        })
+        .catch(err => showError(err.message));
+};
+
+// Delete entry
+const deleteEntry = (id) => {
+    mockDeleteEntry(id)
+        .then(() => {
+            renderTable();
+        })
+        .catch(err => showError(err.message));
+};
+
+// Show error
+const showError = (message) => {
+    const errorDiv = document.getElementById('error');
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+};
+
+        </script>
+</body>
+</html>
